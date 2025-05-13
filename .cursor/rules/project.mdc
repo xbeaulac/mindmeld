@@ -1,0 +1,7 @@
+---
+description: 
+globs: **/*.tsx
+alwaysApply: false
+---
+- this project uses pnpm
+- when using shadcn, use the "shadcn" package
