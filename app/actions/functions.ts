@@ -1,0 +1,171 @@
+"use server";
+
+import { db } from "@/db";
+import { RowDataPacket } from "mysql2";
+import SQL from "sql-template-strings";
+
+// STUDENT FUNCTIONS
+export async function registerStudent(
+  name: string,
+  email: string,
+  password: string,
+  major: string
+) {
+  await db.query(SQL`
+    INSERT INTO StudySession.Student (name, email, password, major)
+    VALUES (${name}, ${email}, ${password}, ${major})
+  `);
+}
+
+export async function getStudentByEmail(email: string) {
+  const [rows] = await db.query<RowDataPacket[]>(SQL`
+    SELECT * FROM StudySession.Student WHERE email = ${email}
+  `);
+  return rows[0];
+}
+
+// TEACHER FUNCTIONS
+export async function registerTeacher(
+  name: string,
+  email: string,
+  password: string
+) {
+  await db.query(SQL`
+    INSERT INTO StudySession.Teacher (name, email, password)
+    VALUES (${name}, ${email}, ${password})
+  `);
+}
+
+export async function getTeacherByEmail(email: string) {
+  const [rows] = await db.query<RowDataPacket[]>(SQL`
+    SELECT * FROM StudySession.Teacher WHERE email = ${email}
+  `);
+  return rows[0];
+}
+
+// COURSE FUNCTIONS
+export async function addCourse(
+  teacher_id: number,
+  subject_code: string,
+  course_number: number,
+  title: string,
+  department: string
+) {
+  await db.query(SQL`
+    INSERT INTO StudySession.Course (teacher_id, subject_code, course_number, title, department)
+    VALUES (${teacher_id}, ${subject_code}, ${course_number}, ${title}, ${department})
+  `);
+}
+
+export async function getAllCourses() {
+  const [rows] = await db.query<RowDataPacket[]>(SQL`
+    SELECT * FROM StudySession.Course
+  `);
+  return rows;
+}
+
+export async function getCoursesByStudent(student_id: number) {
+  const [rows] = await db.query<RowDataPacket[]>(SQL`
+    SELECT c.* FROM StudySession.Course c
+    JOIN StudySession.StudentCourses sc ON c.course_id = sc.course_id
+    WHERE sc.student_id = ${student_id}
+  `);
+  return rows;
+}
+
+// STUDENTCOURSES FUNCTIONS
+export async function joinCourse(
+  student_id: number,
+  course_id: number,
+  semester: string
+) {
+  await db.query(SQL`
+    INSERT INTO StudySession.StudentCourses (student_id, course_id, semester)
+    VALUES (${student_id}, ${course_id}, ${semester})
+  `);
+}
+
+// SESSION FUNCTIONS
+export async function createSession(
+  course_id: number,
+  creator_id: number,
+  start_time: string,
+  end_time: string,
+  url: string,
+  notes: string
+) {
+  await db.query(SQL`
+    INSERT INTO StudySession.Session (course_id, creator_id, start_time, end_time, url, notes)
+    VALUES (${course_id}, ${creator_id}, ${start_time}, ${end_time}, ${url}, ${notes})
+  `);
+}
+
+export async function getSessionsByCourse(course_id: number) {
+  const [rows] = await db.query<RowDataPacket[]>(SQL`
+    SELECT * FROM StudySession.Session WHERE course_id = ${course_id}
+  `);
+  return rows;
+}
+
+export async function getAllUpcomingSessions() {
+  const [rows] = await db.query<RowDataPacket[]>(SQL`
+    SELECT s.* FROM StudySession.Session s
+    JOIN StudySession.StudentCourses sc ON s.course_id = sc.course_id
+    WHERE s.start_time > NOW()
+    ORDER BY s.start_time ASC
+  `);
+  return rows;
+}
+
+// SESSION ATTENDANCE
+export async function rsvpSession(
+  session_id: number,
+  student_id: number,
+  rsvp_status: string
+) {
+  await db.query(SQL`
+    INSERT INTO StudySession.SessionAttendance (session_id, student_id, rsvp_status)
+    VALUES (${session_id}, ${student_id}, ${rsvp_status})
+    ON DUPLICATE KEY UPDATE rsvp_status = ${rsvp_status}
+  `);
+}
+
+export async function rateSession(
+  session_id: number,
+  student_id: number,
+  rating: number
+) {
+  await db.query(SQL`
+    UPDATE StudySession.SessionAttendance
+    SET rating = ${rating}
+    WHERE session_id = ${session_id} AND student_id = ${student_id}
+  `);
+}
+
+// MESSAGES
+export async function postMessage(
+  content: string,
+  session_id: number,
+  student_id: number,
+  parent_message_id: number | null
+) {
+  await db.query(SQL`
+    INSERT INTO StudySession.Message (content, session_id, student_id, parent_message_id)
+    VALUES (${content}, ${session_id}, ${student_id}, ${parent_message_id})
+  `);
+}
+
+export async function getMessagesBySession(session_id: number) {
+  const [rows] = await db.query<RowDataPacket[]>(SQL`
+    SELECT * FROM StudySession.Message WHERE session_id = ${session_id} ORDER BY created_at ASC
+  `);
+  return rows;
+}
+
+export async function likeMessage(message_id: number) {
+  await db.query(SQL`
+    UPDATE StudySession.Message
+    SET likes = likes + 1
+    WHERE message_id = ${message_id}
+  `);
+}
