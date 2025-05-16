@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Getting Started
 
-## Getting Started
+This project is a final project for a Database Management course. You'll use [DataGrip](https://www.jetbrains.com/datagrip/) to manage your MySQL database locally.
 
-First, run the development server:
+Follow these steps to get your development environment up and running:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 1. Install pnpm
+
+This project uses [pnpm](https://pnpm.io/) as the package manager. If you don't have it installed, run:
+
+```sh
+npm install -g pnpm
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 2. Install Dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Run this in the project root:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sh
+pnpm install
+```
 
-## Learn More
+## 3. Set Up the Database with DataGrip
 
-To learn more about Next.js, take a look at the following resources:
+1. **Open DataGrip and create a new MySQL data source**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   - Use username `root` and an empty password (unless your local MySQL is configured differently).
+   - Reference the screenshot below for the correct settings:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ![DataGrip MySQL Data Source Setup](./docs/data-source.png)
 
-## Deploy on Vercel
+2. **Create a new schema named `StudySession`**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   - Right-click your MySQL data source and select `New` > `Schema`.
+   - See the screenshot below for how to access the "New Schema" option:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ![Create New Schema in DataGrip](./docs/new-schema.png)
+
+3. **Run the SQL script to set up tables and sample data**
+
+   - Right-click the `StudySession` schema, go to `SQL Scripts` > `Run SQL Script...`.
+   - Select the `dump.sql` file and execute it.
+   - See the screenshot below for how to access the "Run SQL Script" option:
+
+   ![Run SQL Script in DataGrip](./docs/run-sql-script.png)
+
+## 4. Configure Environment Variables
+
+Create a `.env` file in the project root with the env var in the group chat
+
+```env
+SESSION_SECRET=super_secret_key
+```
+
+## 5. Run the Development Server
+
+```sh
+pnpm dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) to view the app.
