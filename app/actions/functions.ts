@@ -61,8 +61,9 @@ export async function addCourse(
 export async function getAllCourses() {
   const [rows] = await db.query<RowDataPacket[]>(SQL`
     SELECT * FROM StudySession.Course
+    ORDER BY subject_code ASC, course_number ASC
   `);
-  return rows;
+  return rows as Course[];
 }
 
 export async function getCoursesByStudent(student_id: number) {
@@ -92,12 +93,14 @@ export async function createSession(
   creator_id: number,
   start_time: string,
   end_time: string,
-  url: string,
-  notes: string
+  url?: string,
+  notes?: string
 ) {
   await db.query(SQL`
     INSERT INTO StudySession.Session (course_id, creator_id, start_time, end_time, url, notes)
-    VALUES (${course_id}, ${creator_id}, ${start_time}, ${end_time}, ${url}, ${notes})
+    VALUES (${course_id}, ${creator_id}, ${start_time}, ${end_time}, ${
+    url ?? null
+  }, ${notes ?? null})
   `);
 }
 

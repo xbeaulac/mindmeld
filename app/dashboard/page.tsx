@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { getAllUpcomingSessions } from "../actions/functions";
 import LogoutButton from "../components/LogoutButton";
 import Logo from "../Logo";
@@ -13,7 +15,12 @@ export default async function Dashboard() {
           <Logo className="w-10 h-10" />
           <h1 className="text-xl font-bold">MindMeld</h1>
         </div>
-        <LogoutButton />
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/create">
+            <Button variant="default">Create Session</Button>
+          </Link>
+          <LogoutButton />
+        </div>
       </header>
 
       <main className="p-6">
