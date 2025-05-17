@@ -136,7 +136,11 @@ export async function getAllUpcomingSessions() {
       SELECT rsvp_status 
       FROM StudySession.SessionAttendance 
       WHERE session_id = session.session_id AND student_id = ${session.userId}
-    ) AS rsvp_status 
+    ) AS rsvp_status, (
+      SELECT COUNT(*)
+      FROM StudySession.SessionAttendance
+      WHERE session_id = session.session_id AND rsvp_status = 'Yes'
+    ) AS current_attendees
     FROM StudySession.Session session
     INNER JOIN StudySession.Course course ON session.course_id = course.course_id
     INNER JOIN StudySession.Student student ON session.creator_id = student.student_id
@@ -144,14 +148,18 @@ export async function getAllUpcomingSessions() {
     ORDER BY session.start_time ASC
   `);
   return rows as (Session &
-    Course & { creator_name: string; rsvp_status: RSVPStatus })[];
+    Course & {
+      creator_name: string;
+      rsvp_status: RSVPStatus;
+      current_attendees: number;
+    })[];
 }
 
 // SESSION ATTENDANCE
 export async function rsvpSession(
   session_id: number,
   student_id: number,
-  rsvp_status: string
+  rsvp_status: RSVPStatus
 ) {
   await db.query(SQL`
     INSERT INTO StudySession.SessionAttendance (session_id, student_id, rsvp_status)

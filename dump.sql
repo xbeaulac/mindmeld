@@ -116,3 +116,6 @@ INSERT INTO Message (content, session_id, student_id, parent_message_id, likes)
 VALUES ('Looking forward to the session!', 1, 1, NULL, 2),
        ('Great insights on chapter 3.', 2, 2, NULL, 3),
        ('Can we get the slides uploaded?', 3, 3, NULL, 1);
+
+ALTER TABLE SessionAttendance
+ADD PRIMARY KEY (session_id, student_id);

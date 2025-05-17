@@ -1,9 +1,7 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { format, formatDistance } from "date-fns";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import { getAllUpcomingSessions } from "../actions/functions";
 import { RSVPControl } from "./rsvp-control";
 
@@ -30,13 +28,7 @@ export const SessionCard = ({
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4" />
-              <span>
-                {format(session.start_time, "MM/dd/yyyy")}
-                {", "}
-                {formatDistance(session.start_time, new Date(), {
-                  addSuffix: true,
-                })}
-              </span>
+              <span>{format(session.start_time, "MM/dd/yyyy")}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Clock className="h-4 w-4" />
@@ -49,12 +41,14 @@ export const SessionCard = ({
               <MapPin className="h-4 w-4" />
               <span>{session.url}</span>
             </div>
-            {/* <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm">
               <Users className="h-4 w-4" />
               <span>
-                {session.currentAttendees} / {session.maxAttendees} attendees
+                {session.current_attendees}{" "}
+                {session.current_attendees === 1 ? "person is " : "people are "}
+                going
               </span>
-            </div> */}
+            </div>
           </div>
 
           <RSVPControl
