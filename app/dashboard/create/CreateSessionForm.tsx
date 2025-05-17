@@ -1,6 +1,7 @@
 "use client";
+
 import { Course } from "@/app/actions/functions";
-import { createStudySession } from "@/app/actions/study-session";
+import { ActionState, createStudySession } from "@/app/actions/study-session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useActionState } from "react";
+
+function SubmitButton({ pending }: { pending: boolean }) {
+  return (
+    <Button disabled={pending} type="submit" className="w-full mt-4">
+      {pending ? "Creating..." : "Create Session"}
+    </Button>
+  );
+}
+
 export default function CreateSessionForm({
   courses,
   userId,
@@ -20,17 +30,22 @@ export default function CreateSessionForm({
   courses: Course[];
   userId: string;
 }) {
+  const initialState: ActionState = {};
   const [state, formAction, pending] = useActionState(
     createStudySession,
-    undefined
+    initialState
   );
+
   return (
     <form action={formAction} className="space-y-4">
       <div>
         <Label htmlFor="course_id" className="text-sm font-medium mb-2">
           Course *
         </Label>
-        <Select defaultValue={String(state?.data?.course_id)} name="course_id">
+        <Select
+          name="course_id"
+          defaultValue={state?.data?.course_id?.toString()}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a course" />
           </SelectTrigger>
@@ -45,19 +60,15 @@ export default function CreateSessionForm({
             ))}
           </SelectContent>
         </Select>
-        {state?.errors?.course_id && (
+        {state?.errors?.course_id?.[0] && (
           <p className="text-red-500 text-sm mt-1">
             {state.errors.course_id[0]}
           </p>
         )}
       </div>
-      <input
-        type="hidden"
-        className="hidden"
-        id="creator_id"
-        name="creator_id"
-        defaultValue={userId}
-      />
+
+      <input type="hidden" id="creator_id" name="creator_id" value={userId} />
+
       <div>
         <Label htmlFor="start_time" className="text-sm font-medium mb-2">
           Start Time *
@@ -66,14 +77,15 @@ export default function CreateSessionForm({
           id="start_time"
           name="start_time"
           type="datetime-local"
-          defaultValue={state?.data?.start_time as string}
+          defaultValue={state?.data?.start_time}
         />
-        {state?.errors?.start_time && (
+        {state?.errors?.start_time?.[0] && (
           <p className="text-red-500 text-sm mt-1">
             {state.errors.start_time[0]}
           </p>
         )}
       </div>
+
       <div>
         <Label htmlFor="end_time" className="text-sm font-medium mb-2">
           End Time *
@@ -82,35 +94,36 @@ export default function CreateSessionForm({
           id="end_time"
           name="end_time"
           type="datetime-local"
-          defaultValue={state?.data?.end_time as string}
+          defaultValue={state?.data?.end_time}
         />
-        {state?.errors?.end_time && (
+        {state?.errors?.end_time?.[0] && (
           <p className="text-red-500 text-sm mt-1">
             {state.errors.end_time[0]}
           </p>
         )}
       </div>
+
       <div>
         <Label htmlFor="url" className="text-sm font-medium mb-2">
           Session URL
         </Label>
-        <Input id="url" name="url" defaultValue={""} />
-        {state?.errors?.url && (
+        <Input id="url" name="url" type="url" defaultValue={state?.data?.url} />
+        {state?.errors?.url?.[0] && (
           <p className="text-red-500 text-sm mt-1">{state.errors.url[0]}</p>
         )}
       </div>
+
       <div>
         <Label htmlFor="notes" className="text-sm font-medium mb-2">
           Notes
         </Label>
-        <Textarea id="notes" name="notes" defaultValue={""} />
-        {state?.errors?.notes && (
+        <Textarea id="notes" name="notes" defaultValue={state?.data?.notes} />
+        {state?.errors?.notes?.[0] && (
           <p className="text-red-500 text-sm mt-1">{state.errors.notes[0]}</p>
         )}
       </div>
-      <Button disabled={pending} type="submit" className="w-full mt-4">
-        {pending ? "Creating..." : "Create Session"}
-      </Button>
+
+      <SubmitButton pending={pending} />
     </form>
   );
 }

@@ -1,62 +1,54 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSession } from "./functions";
-import { redirect } from "next/navigation";
 
-const createSessionSchema = z.object({
-  course_id: z.coerce.number().gt(0, {
-    message: "Course is required",
-  }),
-  creator_id: z.coerce.number().gt(0, {
-    message: "Creator is required",
-  }),
-  start_time: z.string().min(1, {
-    message: "Start time is required",
-  }),
-  end_time: z.string().min(1, {
-    message: "End time is required",
-  }),
-  url: z.string().optional(),
-  notes: z.string().optional(),
-});
+const createSessionSchema = z
+  .object({
+    course_id: z.coerce.number().gt(0, { message: "Course is required" }),
+    creator_id: z.coerce.number().gt(0, { message: "Creator is required" }),
+    start_time: z.string().min(1, { message: "Start time is required" }),
+    end_time: z.string().min(1, { message: "End time is required" }),
+    url: z.string().optional(),
+    notes: z.string().optional(),
+  })
+  .refine((data) => data.start_time <= data.end_time, {
+    message: "Start time must be before end time",
+    path: ["start_time"],
+  })
+  .refine((data) => data.start_time <= data.end_time, {
+    message: "Start time must be before end time",
+    path: ["end_time"],
+  })
+  .refine((data) => new Date(data.start_time) > new Date(), {
+    message: "Start time must be in the future",
+    path: ["start_time"],
+  });
+
+export type ActionState = {
+  errors?: {
+    course_id?: string[];
+    creator_id?: string[];
+    start_time?: string[];
+    end_time?: string[];
+    url?: string[];
+    notes?: string[];
+  };
+  data?: z.infer<typeof createSessionSchema>;
+};
+
 export async function createStudySession(
-  initialState:
-    | {
-        data?: z.infer<typeof createSessionSchema>;
-        errors?: Partial<
-          Record<keyof z.infer<typeof createSessionSchema>, string[]>
-        >;
-      }
-    | undefined,
+  initialState: ActionState | undefined,
   formData: FormData
-) {
+): Promise<ActionState> {
   const data = Object.fromEntries(formData.entries());
   const validatedFields = createSessionSchema.safeParse(data);
 
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      data: validatedFields.data,
-    };
-  }
-
-  if (validatedFields.data.start_time > validatedFields.data.end_time) {
-    return {
-      errors: {
-        start_time: ["Start time must be before end time"],
-        end_time: ["Start time must be before end time"],
-      },
-      data: validatedFields.data,
-    };
-  }
-
-  if (validatedFields.data.start_time < new Date().toISOString()) {
-    return {
-      errors: {
-        start_time: ["Start time must be in the future"],
-      },
-      data: validatedFields.data,
+      data: data as any,
     };
   }
 
