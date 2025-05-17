@@ -101,9 +101,9 @@ VALUES (1, 1, 'Fall 2024'),
 
 
 INSERT INTO Session (course_id, creator_id, start_time, end_time, url, notes)
-VALUES (1, 1, '2025-04-22 09:00:00', '2025-04-22 10:00:00', 'http://session1.com', 'First session overview'),
-       (2, 2, '2025-04-23 14:00:00', '2025-04-23 15:30:00', 'http://session2.com', 'Chapter 3 review'),
-       (3, 3, '2025-04-24 11:00:00', '2025-04-24 12:00:00', 'http://session3.com', 'Exam prep');
+VALUES (1, 1, '2025-06-22 09:00:00', '2025-06-22 10:00:00', 'http://session1.com', 'First session overview'),
+       (2, 2, '2025-06-23 14:00:00', '2025-06-23 15:30:00', 'http://session2.com', 'Chapter 3 review'),
+       (3, 3, '2025-06-24 11:00:00', '2025-06-24 12:00:00', 'http://session3.com', 'Exam prep');
 
 
 INSERT INTO SessionAttendance (session_id, student_id, rsvp_status, rating)

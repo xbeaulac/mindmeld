@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { RowDataPacket } from "mysql2";
 import SQL from "sql-template-strings";
+import { getSession } from "../lib/session";
 
 // STUDENT FUNCTIONS
 export async function registerStudent(
@@ -107,14 +108,43 @@ export async function getSessionsByCourse(course_id: number) {
   return rows;
 }
 
+export type Session = {
+  session_id: number;
+  course_id: number;
+  creator_id: number;
+  start_time: Date;
+  end_time: Date;
+  url: string;
+  notes: string;
+};
+
+export type Course = {
+  course_id: number;
+  teacher_id: number;
+  subject_code: string;
+  course_number: number;
+  title: string;
+};
+
+export type RSVPStatus = "Yes" | "Maybe" | "No";
+
 export async function getAllUpcomingSessions() {
+  const session = await getSession();
   const [rows] = await db.query<RowDataPacket[]>(SQL`
-    SELECT s.* FROM StudySession.Session s
-    JOIN StudySession.StudentCourses sc ON s.course_id = sc.course_id
-    WHERE s.start_time > NOW()
-    ORDER BY s.start_time ASC
+    -- include subquery to get rsvp status
+    SELECT session.*, course.*, student.name AS creator_name, (
+      SELECT rsvp_status 
+      FROM StudySession.SessionAttendance 
+      WHERE session_id = session.session_id AND student_id = ${session.userId}
+    ) AS rsvp_status 
+    FROM StudySession.Session session
+    INNER JOIN StudySession.Course course ON session.course_id = course.course_id
+    INNER JOIN StudySession.Student student ON session.creator_id = student.student_id
+    WHERE session.start_time > NOW()
+    ORDER BY session.start_time ASC
   `);
-  return rows;
+  return rows as (Session &
+    Course & { creator_name: string; rsvp_status: RSVPStatus })[];
 }
 
 // SESSION ATTENDANCE
