@@ -119,7 +119,7 @@ export default async function SessionDetailPage({
               Back to Dashboard
             </Button>
           </Link>
-          {Number(session.userId) === sessionDetails.creator_id && (
+          {Number(session?.userId) === sessionDetails.creator_id && (
             <DeleteSessionButton
               sessionId={sessionDetails.session_id}
               creatorId={sessionDetails.creator_id}

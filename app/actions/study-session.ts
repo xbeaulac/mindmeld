@@ -68,7 +68,7 @@ export async function deleteStudySession(
 ) {
   const session = await getSession();
 
-  if (Number(session.userId) !== creator_id) {
+  if (Number(session?.userId) !== creator_id) {
     throw new Error("Unauthorized: Only the creator can delete this session");
   }
 

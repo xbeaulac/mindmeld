@@ -138,7 +138,7 @@ export async function getAllUpcomingSessions() {
     SELECT session.*, course.*, student.name AS creator_name, (
       SELECT rsvp_status 
       FROM StudySession.SessionAttendance 
-      WHERE session_id = session.session_id AND student_id = ${session.userId}
+      WHERE session_id = session.session_id AND student_id = ${session?.userId}
     ) AS rsvp_status, (
       SELECT COUNT(*)
       FROM StudySession.SessionAttendance
@@ -221,7 +221,7 @@ export async function getSessionDetails(session_id: number) {
       (
         SELECT rsvp_status 
         FROM StudySession.SessionAttendance 
-        WHERE session_id = session.session_id AND student_id = ${session.userId}
+        WHERE session_id = session.session_id AND student_id = ${session?.userId}
       ) AS rsvp_status,
       (
         SELECT COUNT(*)
@@ -243,7 +243,7 @@ export async function getSessionDetails(session_id: number) {
         SELECT 1 
         FROM StudySession.MessageLike 
         WHERE message_id = message.message_id 
-        AND student_id = ${session.userId}
+        AND student_id = ${session?.userId}
       ) as has_liked
     FROM StudySession.Message message
     INNER JOIN StudySession.Student student ON message.student_id = student.student_id

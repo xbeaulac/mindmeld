@@ -31,7 +31,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider userId={Number(session.userId)}>
+        <SessionProvider userId={Number(session?.userId)}>
           {children}
         </SessionProvider>
       </body>

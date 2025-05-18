@@ -40,7 +40,7 @@ export async function postMessage(
   try {
     await db.query(SQL`
       INSERT INTO StudySession.Message (content, session_id, student_id, parent_message_id)
-      VALUES (${content}, ${session_id}, ${session.userId}, ${
+      VALUES (${content}, ${session_id}, ${session?.userId}, ${
       parent_message_id ?? null
     })
     `);
@@ -66,7 +66,7 @@ export async function likeMessageAction(
   }
 
   const session = await getSession();
-  const userId = session.userId;
+  const userId = session?.userId;
 
   try {
     // Check if user has already liked the message
@@ -119,7 +119,7 @@ export async function deleteMessage(
     // Check if user is the message author
     const [[message]] = await db.query<RowDataPacket[]>(SQL`
       SELECT * FROM StudySession.Message 
-      WHERE message_id = ${messageId} AND student_id = ${session.userId}
+      WHERE message_id = ${messageId} AND student_id = ${session?.userId}
     `);
 
     if (!message) {
