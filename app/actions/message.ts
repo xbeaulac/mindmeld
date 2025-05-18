@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/db";
+import { RowDataPacket } from "mysql2";
 import { revalidatePath } from "next/cache";
 import SQL from "sql-template-strings";
 import { z } from "zod";
@@ -105,5 +106,41 @@ export async function likeMessageAction(
     return { success: true, liked: !hasLiked };
   } catch (error) {
     return { success: false, liked: false };
+  }
+}
+
+export async function deleteMessage(
+  messageId: number,
+  sessionId: number
+): Promise<{ success: boolean }> {
+  const session = await getSession();
+
+  try {
+    // Check if user is the message author
+    const [[message]] = await db.query<RowDataPacket[]>(SQL`
+      SELECT * FROM StudySession.Message 
+      WHERE message_id = ${messageId} AND student_id = ${session.userId}
+    `);
+
+    if (!message) {
+      return { success: false };
+    }
+
+    // Delete message likes first due to foreign key constraint
+    await db.query(SQL`
+      DELETE FROM StudySession.MessageLike 
+      WHERE message_id = ${messageId}
+    `);
+
+    // Delete the message
+    await db.query(SQL`
+      DELETE FROM StudySession.Message 
+      WHERE message_id = ${messageId}
+    `);
+
+    revalidatePath(`/dashboard/session/${sessionId}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false };
   }
 }

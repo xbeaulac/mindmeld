@@ -9,6 +9,7 @@ type Message = {
   content: string;
   created_at: string;
   author_name: string;
+  student_id: number;
   likes: number;
   has_liked: boolean;
 };

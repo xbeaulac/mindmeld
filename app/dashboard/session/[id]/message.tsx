@@ -1,10 +1,18 @@
 "use client";
 
-import { likeMessageAction } from "@/app/actions/message";
+import { deleteMessage, likeMessageAction } from "@/app/actions/message";
+import { useSession } from "@/app/providers/session-provider";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Heart } from "lucide-react";
+import { Heart, MoreVertical, Trash } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useOptimistic } from "react";
 
 type MessageProps = {
@@ -12,12 +20,15 @@ type MessageProps = {
   content: string;
   created_at: string;
   author_name: string;
+  student_id: number;
   likes: number;
   has_liked: boolean;
   sessionId: number;
 };
 
 export function Message(message: MessageProps) {
+  const { userId } = useSession();
+  const router = useRouter();
   const [optimistic, addOptimistic] = useOptimistic(
     message,
     (state: MessageProps) => ({
@@ -27,6 +38,15 @@ export function Message(message: MessageProps) {
     })
   );
 
+  const isAuthor = message.student_id === userId;
+
+  const handleDelete = async () => {
+    const result = await deleteMessage(message.message_id, message.sessionId);
+    if (result.success) {
+      router.refresh();
+    }
+  };
+
   return (
     <div className="flex flex-col space-y-1">
       <div className="flex items-center gap-2">
@@ -34,6 +54,23 @@ export function Message(message: MessageProps) {
         <span className="text-sm text-muted-foreground">
           {format(new Date(optimistic.created_at), "MMM d, h:mm a")}
         </span>
+        {isAuthor && (
+          <div className="ml-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleDelete}>
+                  <Trash className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
       <p className="text-sm flex-grow">{optimistic.content}</p>
       <form

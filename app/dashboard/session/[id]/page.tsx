@@ -35,6 +35,7 @@ type Message = {
   content: string;
   created_at: string;
   author_name: string;
+  student_id: number;
   likes: number;
   has_liked: boolean;
 };
@@ -97,6 +98,7 @@ export default async function SessionDetailPage({
       content: m.content,
       created_at: m.created_at,
       author_name: m.author_name,
+      student_id: m.student_id,
       likes: m.likes,
       has_liked: m.has_liked,
     })),

@@ -238,6 +238,7 @@ export async function getSessionDetails(session_id: number) {
     SELECT 
       message.*,
       student.name as author_name,
+      student.student_id,
       EXISTS (
         SELECT 1 
         FROM StudySession.MessageLike 
