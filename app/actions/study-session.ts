@@ -1,8 +1,10 @@
 "use server";
 
+import { getSession } from "@/app/lib/session";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createSession } from "./functions";
+import { createSession, deleteSession } from "./functions";
 
 const createSessionSchema = z
   .object({
@@ -57,5 +59,20 @@ export async function createStudySession(
 
   await createSession(course_id, creator_id, start_time, end_time, url, notes);
 
+  redirect("/dashboard");
+}
+
+export async function deleteStudySession(
+  session_id: number,
+  creator_id: number
+) {
+  const session = await getSession();
+
+  if (Number(session.userId) !== creator_id) {
+    throw new Error("Unauthorized: Only the creator can delete this session");
+  }
+
+  await deleteSession(session_id);
+  revalidatePath("/dashboard");
   redirect("/dashboard");
 }

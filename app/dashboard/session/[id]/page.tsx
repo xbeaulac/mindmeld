@@ -1,4 +1,5 @@
 import { getSessionDetails, RSVPStatus } from "@/app/actions/functions";
+import { getSession } from "@/app/lib/session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
@@ -8,6 +9,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RSVPControl } from "../../rsvp-control";
 import { AttendeeList } from "./attendee-list";
+import { DeleteSessionButton } from "./delete-session-button";
 import { MessageList } from "./message-list";
 
 type RawSessionDetails = RowDataPacket & {
@@ -66,6 +68,7 @@ export default async function SessionDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await getSession();
   const rawSessionDetails = (await getSessionDetails(
     parseInt((await params).id)
   )) as RawSessionDetails;
@@ -107,13 +110,19 @@ export default async function SessionDetailPage({
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div>
+        <div className="flex justify-between items-center">
           <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="mb-4">
+            <Button variant="ghost" size="sm">
               <ChevronLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
           </Link>
+          {Number(session.userId) === sessionDetails.creator_id && (
+            <DeleteSessionButton
+              sessionId={sessionDetails.session_id}
+              creatorId={sessionDetails.creator_id}
+            />
+          )}
         </div>
 
         <Card>

@@ -266,3 +266,9 @@ export async function getSessionDetails(session_id: number) {
     attendees,
   };
 }
+
+export async function deleteSession(session_id: number) {
+  await db.query(SQL`
+    DELETE FROM StudySession.Session WHERE session_id = ${session_id}
+  `);
+}
