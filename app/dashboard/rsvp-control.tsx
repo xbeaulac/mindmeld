@@ -11,20 +11,18 @@ export const RSVPControl = ({
   defaultStatus,
   sessionId,
 }: {
-  defaultStatus: RSVPStatus;
+  defaultStatus: RSVPStatus | null;
   sessionId: number;
 }) => {
   const formRef = useRef<HTMLFormElement>(null);
-  const [optimistic, setOptimistic] = useState<RSVPStatus | undefined>(
-    undefined
-  );
+  const [optimistic, setOptimistic] = useState<RSVPStatus | null>(null);
 
   return (
     <form ref={formRef} action={rsvpAction}>
       <input type="hidden" name="sessionId" value={sessionId} />
       <RadioGroup
         name="status"
-        defaultValue={defaultStatus}
+        defaultValue={defaultStatus ?? ""}
         onValueChange={(val) => {
           setOptimistic(val as RSVPStatus);
           formRef.current?.requestSubmit();

@@ -210,3 +210,59 @@ export async function likeMessage(message_id: number) {
     WHERE message_id = ${message_id}
   `);
 }
+
+export async function getSessionDetails(session_id: number) {
+  const session = await getSession();
+  const [[sessionDetails]] = await db.query<RowDataPacket[]>(SQL`
+    SELECT 
+      session.*,
+      course.*,
+      creator.name AS creator_name,
+      (
+        SELECT rsvp_status 
+        FROM StudySession.SessionAttendance 
+        WHERE session_id = session.session_id AND student_id = ${session.userId}
+      ) AS rsvp_status,
+      (
+        SELECT COUNT(*)
+        FROM StudySession.SessionAttendance
+        WHERE session_id = session.session_id AND rsvp_status = 'Yes'
+      ) AS current_attendees
+    FROM StudySession.Session session
+    INNER JOIN StudySession.Course course ON session.course_id = course.course_id
+    INNER JOIN StudySession.Student creator ON session.creator_id = creator.student_id
+    WHERE session.session_id = ${session_id}
+  `);
+
+  const [messages] = await db.query<RowDataPacket[]>(SQL`
+    SELECT 
+      message.*,
+      student.name as author_name,
+      EXISTS (
+        SELECT 1 
+        FROM StudySession.MessageLike 
+        WHERE message_id = message.message_id 
+        AND student_id = ${session.userId}
+      ) as has_liked
+    FROM StudySession.Message message
+    INNER JOIN StudySession.Student student ON message.student_id = student.student_id
+    WHERE message.session_id = ${session_id}
+    ORDER BY message.created_at ASC
+  `);
+
+  const [attendees] = await db.query<RowDataPacket[]>(SQL`
+    SELECT 
+      student.name,
+      attendance.rsvp_status,
+      attendance.rating
+    FROM StudySession.SessionAttendance attendance
+    INNER JOIN StudySession.Student student ON attendance.student_id = student.student_id
+    WHERE attendance.session_id = ${session_id}
+  `);
+
+  return {
+    ...sessionDetails,
+    messages,
+    attendees,
+  };
+}
