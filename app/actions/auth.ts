@@ -33,7 +33,6 @@ export async function login(
 
   const validatedFields = loginSchema.safeParse({ email, password });
 
-  // If any form fields are invalid, return early
   if (!validatedFields.success) {
     return {
       data: { email, password },
@@ -65,17 +64,88 @@ export async function login(
   redirect("/dashboard");
 }
 
-export async function signup(formData: FormData) {
-  // Previous steps:
-  // 1. Validate form fields
+const signupSchema = z.object({
+  firstName: z.string().min(1, { message: "First name is required" }),
+  lastName: z.string().min(1, { message: "Last name is required" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" }),
+  major: z.string().min(1, { message: "Major is required" }),
+});
+
+export async function signup(
+  initialState:
+    | {
+        data?: z.infer<typeof signupSchema>;
+        errors?: Partial<Record<keyof z.infer<typeof signupSchema>, string[]>>;
+      }
+    | undefined,
+  formData: FormData
+) {
   const firstName = formData.get("firstName") as string;
   const lastName = formData.get("lastName") as string;
-  const major = formData.get("major") as string;
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const major = formData.get("major") as string;
 
-  // 2. Insert the user into the database or call an Library API
-  const [rows] = await db.query<RowDataPacket[]>(SQL`
-    INSERT INTO StudySession.Student (name, major, email, password) VALUES ('${firstName} ${lastName}', ${major}, ${email}, ${password})
-  `);
+  const validatedFields = signupSchema.safeParse({
+    firstName,
+    lastName,
+    email,
+    password,
+    major,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      data: { firstName, lastName, email, password, major },
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    // Check if email already exists
+    const [existingRows] = await db.query<RowDataPacket[]>(SQL`
+      SELECT * FROM StudySession.Student WHERE email = ${email}
+    `);
+
+    if (existingRows.length > 0) {
+      return {
+        data: { firstName, lastName, email, password, major },
+        errors: { email: ["Email already in use"] },
+      };
+    }
+
+    // Register the new student
+    await db.query(SQL`
+      INSERT INTO StudySession.Student (name, email, password, major)
+      VALUES (${`${firstName} ${lastName}`}, ${email}, ${password}, ${major})
+    `);
+
+    // Get the new student and create session
+    const [newStudentRows] = await db.query<RowDataPacket[]>(SQL`
+      SELECT * FROM StudySession.Student WHERE email = ${email}
+    `);
+    
+    if (newStudentRows.length === 0) {
+      throw new Error("Failed to retrieve newly created student");
+    }
+
+    await createSession(newStudentRows[0].student_id);
+    
+    // Return success state before redirecting
+    return {
+      data: undefined,
+      errors: undefined,
+      success: true
+    };
+    
+  } catch (error) {
+    console.error("Signup error:", error);
+    return {
+      data: { firstName, lastName, email, password, major },
+      errors: { email: ["An error occurred during signup"] },
+    };
+  }
 }
