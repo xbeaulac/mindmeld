@@ -29,30 +29,39 @@ type MessageProps = {
 export function Message(message: MessageProps) {
   const { userId } = useSession();
   const router = useRouter();
-  const [optimistic, addOptimistic] = useOptimistic(
+  const [optimisticMessage, addOptimistic] = useOptimistic(
     message,
-    (state: MessageProps) => ({
+    (state, newLikeStatus: boolean) => ({
       ...state,
-      likes: state.likes + (state.has_liked ? -1 : 1),
-      has_liked: !state.has_liked,
+      likes: newLikeStatus ? state.likes + 1 : state.likes - 1,
+      has_liked: newLikeStatus,
     })
   );
 
-  const isAuthor = message.student_id === userId;
+  const isAuthor = optimisticMessage.student_id === userId;
 
   const handleDelete = async () => {
-    const result = await deleteMessage(message.message_id, message.sessionId);
+    const result = await deleteMessage(
+      optimisticMessage.message_id,
+      optimisticMessage.sessionId
+    );
     if (result.success) {
       router.refresh();
     }
   };
 
+  const handleLike = async (formData: FormData) => {
+    const newLikeStatus = !optimisticMessage.has_liked;
+    addOptimistic(newLikeStatus);
+    await likeMessageAction(formData);
+  };
+
   return (
     <div className="flex flex-col space-y-1">
       <div className="flex items-center gap-2">
-        <span className="font-medium">{optimistic.author_name}</span>
+        <span className="font-medium">{optimisticMessage.author_name}</span>
         <span className="text-sm text-muted-foreground">
-          {format(new Date(optimistic.created_at), "MMM d, h:mm a")}
+          {format(new Date(optimisticMessage.created_at), "MMM d, h:mm a")}
         </span>
         {isAuthor && (
           <div className="ml-auto">
@@ -72,15 +81,11 @@ export function Message(message: MessageProps) {
           </div>
         )}
       </div>
-      <p className="text-sm flex-grow">{optimistic.content}</p>
-      <form
-        action={async (formData: FormData) => {
-          addOptimistic(optimistic);
-          await likeMessageAction(formData);
-        }}
-      >
-        <input type="hidden" name="message_id" value={optimistic.message_id} />
-        <input type="hidden" name="session_id" value={optimistic.sessionId} />
+      <p className="text-sm flex-grow">{optimisticMessage.content}</p>
+      <form action={handleLike}>
+        <input type="hidden" name="message_id" value={optimisticMessage.message_id} />
+        <input type="hidden" name="session_id" value={optimisticMessage.sessionId} />
+        <input type="hidden" name="has_liked" value={String(optimisticMessage.has_liked)} />
         <Button
           type="submit"
           variant="ghost"
@@ -90,7 +95,7 @@ export function Message(message: MessageProps) {
           <Heart
             className={cn(
               "h-4 w-4 transition-colors",
-              optimistic.has_liked
+              optimisticMessage.has_liked
                 ? "fill-red-500 text-red-500"
                 : "text-gray-500 group-hover:text-red-500"
             )}
@@ -98,12 +103,12 @@ export function Message(message: MessageProps) {
           <span
             className={cn(
               "text-sm transition-colors",
-              optimistic.has_liked
+              optimisticMessage.has_liked
                 ? "text-red-500"
                 : "text-gray-500 group-hover:text-red-500"
             )}
           >
-            {optimistic.likes}
+            {optimisticMessage.likes}
           </span>
         </Button>
       </form>

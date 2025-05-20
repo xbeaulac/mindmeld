@@ -39,7 +39,7 @@ export async function postMessage(
 
   try {
     await db.query(SQL`
-      INSERT INTO StudySession.Message (content, session_id, student_id, parent_message_id)
+      INSERT INTO Message (content, session_id, student_id, parent_message_id)
       VALUES (${content}, ${session_id}, ${session?.userId}, ${
       parent_message_id ?? null
     })
@@ -61,51 +61,38 @@ export async function likeMessageAction(
   formData: FormData
 ): Promise<LikeActionResponse> {
   const messageId = formData.get("message_id");
+  const sessionId = formData.get("session_id");
+  const hasLiked = formData.get("has_liked") === "true";
+  
   if (!messageId || typeof messageId !== "string") {
     throw new Error("Message ID is required");
   }
-
-  const session = await getSession();
-  const userId = session?.userId;
+  if (!sessionId || typeof sessionId !== "string") {
+    throw new Error("Session ID is required");
+  }
 
   try {
-    // Check if user has already liked the message
-    const [likes] = await db.query<any[]>(SQL`
-      SELECT * FROM StudySession.MessageLike 
-      WHERE message_id = ${messageId} AND student_id = ${userId}
-    `);
-
-    const hasLiked = likes.length > 0;
-
     if (hasLiked) {
-      // Unlike: Remove like and decrement count
+      // Unlike: Decrement count
       await db.query(SQL`
-        DELETE FROM StudySession.MessageLike 
-        WHERE message_id = ${messageId} AND student_id = ${userId}
-      `);
-      await db.query(SQL`
-        UPDATE StudySession.Message
+        UPDATE Message
         SET likes = likes - 1
         WHERE message_id = ${messageId}
       `);
     } else {
-      // Like: Add like and increment count
+      // Like: Increment count
       await db.query(SQL`
-        INSERT INTO StudySession.MessageLike (message_id, student_id)
-        VALUES (${messageId}, ${userId})
-      `);
-      await db.query(SQL`
-        UPDATE StudySession.Message
+        UPDATE Message
         SET likes = likes + 1
         WHERE message_id = ${messageId}
       `);
     }
 
-    const sessionId = formData.get("session_id");
     revalidatePath(`/dashboard/session/${sessionId}`);
     return { success: true, liked: !hasLiked };
   } catch (error) {
-    return { success: false, liked: false };
+    console.error("Error in likeMessageAction:", error);
+    return { success: false, liked: hasLiked };
   }
 }
 
@@ -118,7 +105,7 @@ export async function deleteMessage(
   try {
     // Check if user is the message author
     const [[message]] = await db.query<RowDataPacket[]>(SQL`
-      SELECT * FROM StudySession.Message 
+      SELECT * FROM Message 
       WHERE message_id = ${messageId} AND student_id = ${session?.userId}
     `);
 
@@ -126,21 +113,16 @@ export async function deleteMessage(
       return { success: false };
     }
 
-    // Delete message likes first due to foreign key constraint
-    await db.query(SQL`
-      DELETE FROM StudySession.MessageLike 
-      WHERE message_id = ${messageId}
-    `);
-
     // Delete the message
     await db.query(SQL`
-      DELETE FROM StudySession.Message 
+      DELETE FROM Message 
       WHERE message_id = ${messageId}
     `);
 
     revalidatePath(`/dashboard/session/${sessionId}`);
     return { success: true };
   } catch (error) {
+    console.error("Error in deleteMessage:", error);
     return { success: false };
   }
 }

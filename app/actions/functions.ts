@@ -132,25 +132,25 @@ export type Course = {
 export type RSVPStatus = "Yes" | "Maybe" | "No";
 
 export async function getAllUpcomingSessions() {
-  const session = await getSession();
-  const [rows] = await db.query<RowDataPacket[]>(SQL`
-    -- include subquery to get rsvp status
-    SELECT session.*, course.*, student.name AS creator_name, (
-      SELECT rsvp_status 
-      FROM StudySession.SessionAttendance 
-      WHERE session_id = session.session_id AND student_id = ${session?.userId}
-    ) AS rsvp_status, (
-      SELECT COUNT(*)
-      FROM StudySession.SessionAttendance
-      WHERE session_id = session.session_id AND rsvp_status = 'Yes'
-    ) AS current_attendees
-    FROM StudySession.Session session
-    INNER JOIN StudySession.Course course ON session.course_id = course.course_id
-    INNER JOIN StudySession.Student student ON session.creator_id = student.student_id
-    WHERE session.start_time > NOW()
-    ORDER BY session.start_time ASC
-  `);
-  return rows as (Session &
+    const session = await getSession();
+    const [rows] = await db.query<RowDataPacket[]>(SQL`
+      SELECT session.*, course.*, student.name AS creator_name, (
+        SELECT rsvp_status 
+        FROM StudySession.SessionAttendance 
+        WHERE session_id = session.session_id AND student_id = ${session?.userId}
+        LIMIT 1
+      ) AS rsvp_status, (
+        SELECT COUNT(*)
+        FROM StudySession.SessionAttendance
+        WHERE session_id = session.session_id AND rsvp_status = 'Yes'
+      ) AS current_attendees
+      FROM StudySession.Session session
+      INNER JOIN StudySession.Course course ON session.course_id = course.course_id
+      INNER JOIN StudySession.Student student ON session.creator_id = student.student_id
+      WHERE session.start_time > NOW()
+      ORDER BY session.start_time ASC
+    `);
+    return rows as (Session &
     Course & {
       creator_name: string;
       rsvp_status: RSVPStatus;
@@ -241,7 +241,7 @@ export async function getSessionDetails(session_id: number) {
       student.student_id,
       EXISTS (
         SELECT 1 
-        FROM StudySession.MessageLike 
+        FROM StudySession.Message 
         WHERE message_id = message.message_id 
         AND student_id = ${session?.userId}
       ) as has_liked
