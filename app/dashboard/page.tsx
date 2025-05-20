@@ -4,6 +4,7 @@ import { getAllUpcomingSessions } from "../actions/functions";
 import LogoutButton from "../components/LogoutButton";
 import Logo from "../Logo";
 import { SessionCard } from "./session-card";
+import { ThemeToggle } from "../components/theme-toggle"
 
 export default async function Dashboard() {
   const sessions = await getAllUpcomingSessions();
@@ -16,6 +17,7 @@ export default async function Dashboard() {
           <h1 className="text-xl font-bold">MindMeld</h1>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           <Link href="/dashboard/create">
             <Button variant="default">Create Session</Button>
           </Link>
