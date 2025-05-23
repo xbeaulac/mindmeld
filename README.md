@@ -6,6 +6,10 @@ Created by Xander, Drew, and Brandon.
 
 We used [Cursor](https://www.cursor.com/en) to quickly build this project.
 
+# Source Code
+
+View all the source code on [GitHub](https://github.com/xbeaulac/mindmeld)
+
 # Demo
 
 There is a screen recording of the project at `docs/Screen Recording.mov`.
