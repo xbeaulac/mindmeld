@@ -62,8 +62,7 @@ export async function likeMessageAction(
 ): Promise<LikeActionResponse> {
   const messageId = formData.get("message_id");
   const sessionId = formData.get("session_id");
-  const hasLiked = formData.get("has_liked") === "true";
-  
+
   if (!messageId || typeof messageId !== "string") {
     throw new Error("Message ID is required");
   }
@@ -71,28 +70,47 @@ export async function likeMessageAction(
     throw new Error("Session ID is required");
   }
 
+  const session = await getSession();
+  if (!session?.userId) {
+    throw new Error("User not authenticated");
+  }
+
   try {
-    if (hasLiked) {
-      // Unlike: Decrement count
+    // Check if user has already liked this message
+    const [[existingLike]] = await db.query<RowDataPacket[]>(SQL`
+      SELECT 1 FROM StudySession.MessageLike 
+      WHERE message_id = ${messageId} AND student_id = ${session.userId}
+    `);
+
+    if (existingLike) {
+      // Unlike: Remove the like record and decrement count
       await db.query(SQL`
-        UPDATE Message
-        SET likes = likes - 1
+        DELETE FROM StudySession.MessageLike 
+        WHERE message_id = ${messageId} AND student_id = ${session.userId}
+      `);
+      await db.query(SQL`
+        UPDATE StudySession.Message 
+        SET likes = likes - 1 
         WHERE message_id = ${messageId}
       `);
     } else {
-      // Like: Increment count
+      // Like: Add the like record and increment count
       await db.query(SQL`
-        UPDATE Message
-        SET likes = likes + 1
+        INSERT INTO StudySession.MessageLike (message_id, student_id) 
+        VALUES (${messageId}, ${session.userId})
+      `);
+      await db.query(SQL`
+        UPDATE StudySession.Message 
+        SET likes = likes + 1 
         WHERE message_id = ${messageId}
       `);
     }
 
     revalidatePath(`/dashboard/session/${sessionId}`);
-    return { success: true, liked: !hasLiked };
+    return { success: true, liked: !existingLike };
   } catch (error) {
     console.error("Error in likeMessageAction:", error);
-    return { success: false, liked: hasLiked };
+    return { success: false, liked: false };
   }
 }
 
@@ -105,7 +123,7 @@ export async function deleteMessage(
   try {
     // Check if user is the message author
     const [[message]] = await db.query<RowDataPacket[]>(SQL`
-      SELECT * FROM Message 
+      SELECT * FROM StudySession.Message 
       WHERE message_id = ${messageId} AND student_id = ${session?.userId}
     `);
 
@@ -115,7 +133,7 @@ export async function deleteMessage(
 
     // Delete the message
     await db.query(SQL`
-      DELETE FROM Message 
+      DELETE FROM StudySession.Message 
       WHERE message_id = ${messageId}
     `);
 

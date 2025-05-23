@@ -9,7 +9,7 @@ import { z } from "zod";
 
 export async function logout() {
   await deleteSession();
-  redirect("/login");
+  redirect("/");
 }
 
 const loginSchema = z.object({
@@ -123,24 +123,17 @@ export async function signup(
       VALUES (${`${firstName} ${lastName}`}, ${email}, ${password}, ${major})
     `);
 
-    // Get the new student and create session
+    // Get the new student
     const [newStudentRows] = await db.query<RowDataPacket[]>(SQL`
       SELECT * FROM StudySession.Student WHERE email = ${email}
     `);
-    
+
     if (newStudentRows.length === 0) {
       throw new Error("Failed to retrieve newly created student");
     }
 
+    // Create session
     await createSession(newStudentRows[0].student_id);
-    
-    // Return success state before redirecting
-    return {
-      data: undefined,
-      errors: undefined,
-      success: true
-    };
-    
   } catch (error) {
     console.error("Signup error:", error);
     return {
@@ -148,4 +141,7 @@ export async function signup(
       errors: { email: ["An error occurred during signup"] },
     };
   }
+
+  // Redirect after successful signup
+  redirect("/dashboard");
 }

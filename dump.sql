@@ -76,6 +76,18 @@ CREATE TABLE Message
 );
 
 
+-- Table: MessageLike
+CREATE TABLE MessageLike
+(
+    message_id INT NOT NULL,
+    student_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (message_id, student_id),
+    FOREIGN KEY (message_id) REFERENCES Message(message_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES Student(student_id) ON DELETE CASCADE
+);
+
+
 INSERT INTO Student (name, email, password, major)
 VALUES ('Alice Johnson', 'alice@example.com', 'password123', 'Computer Science'),
        ('Bob Smith', 'bob@example.com', 'securepass', 'Biology'),
@@ -119,3 +131,34 @@ VALUES ('Looking forward to the session!', 1, 1, NULL, 2),
 
 ALTER TABLE SessionAttendance
 ADD PRIMARY KEY (session_id, student_id);
+
+-- Add foreign key constraints with CASCADE on delete
+ALTER TABLE Course
+ADD CONSTRAINT fk_course_teacher 
+FOREIGN KEY (teacher_id) REFERENCES Teacher(teacher_id) ON DELETE CASCADE;
+
+ALTER TABLE StudentCourses
+ADD CONSTRAINT fk_studentcourses_student 
+FOREIGN KEY (student_id) REFERENCES Student(student_id) ON DELETE CASCADE,
+ADD CONSTRAINT fk_studentcourses_course 
+FOREIGN KEY (course_id) REFERENCES Course(course_id) ON DELETE CASCADE;
+
+ALTER TABLE Session
+ADD CONSTRAINT fk_session_course 
+FOREIGN KEY (course_id) REFERENCES Course(course_id) ON DELETE CASCADE,
+ADD CONSTRAINT fk_session_creator 
+FOREIGN KEY (creator_id) REFERENCES Student(student_id) ON DELETE CASCADE;
+
+ALTER TABLE SessionAttendance
+ADD CONSTRAINT fk_sessionattendance_session 
+FOREIGN KEY (session_id) REFERENCES Session(session_id) ON DELETE CASCADE,
+ADD CONSTRAINT fk_sessionattendance_student 
+FOREIGN KEY (student_id) REFERENCES Student(student_id) ON DELETE CASCADE;
+
+ALTER TABLE Message
+ADD CONSTRAINT fk_message_session 
+FOREIGN KEY (session_id) REFERENCES Session(session_id) ON DELETE CASCADE,
+ADD CONSTRAINT fk_message_student 
+FOREIGN KEY (student_id) REFERENCES Student(student_id) ON DELETE CASCADE,
+ADD CONSTRAINT fk_message_parent 
+FOREIGN KEY (parent_message_id) REFERENCES Message(message_id) ON DELETE CASCADE;

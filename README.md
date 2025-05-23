@@ -1,3 +1,15 @@
+# MindMeld
+
+Meet up. Lock in.
+
+Created by Xander, Drew, and Brandon.
+
+We used [Cursor](https://www.cursor.com/en) to quickly build this project.
+
+# Demo
+
+There is a screen recording of the project at `docs/Screen Recording.mov`.
+
 # Getting Started
 
 This project is a final project for a Database Management course. You'll use [DataGrip](https://www.jetbrains.com/datagrip/) to manage your MySQL database locally.
@@ -44,15 +56,7 @@ pnpm install
 
    ![Run SQL Script in DataGrip](./docs/run-sql-script.png)
 
-## 4. Configure Environment Variables
-
-Create a `.env` file in the project root with the env var in the group chat
-
-```env
-SESSION_SECRET=super_secret_key
-```
-
-## 5. Run the Development Server
+## 4. Run the Development Server
 
 ```sh
 pnpm dev

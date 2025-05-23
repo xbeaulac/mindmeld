@@ -83,9 +83,16 @@ export function Message(message: MessageProps) {
       </div>
       <p className="text-sm flex-grow">{optimisticMessage.content}</p>
       <form action={handleLike}>
-        <input type="hidden" name="message_id" value={optimisticMessage.message_id} />
-        <input type="hidden" name="session_id" value={optimisticMessage.sessionId} />
-        <input type="hidden" name="has_liked" value={String(optimisticMessage.has_liked)} />
+        <input
+          type="hidden"
+          name="message_id"
+          value={optimisticMessage.message_id}
+        />
+        <input
+          type="hidden"
+          name="session_id"
+          value={optimisticMessage.sessionId}
+        />
         <Button
           type="submit"
           variant="ghost"

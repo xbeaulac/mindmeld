@@ -132,8 +132,8 @@ export type Course = {
 export type RSVPStatus = "Yes" | "Maybe" | "No";
 
 export async function getAllUpcomingSessions() {
-    const session = await getSession();
-    const [rows] = await db.query<RowDataPacket[]>(SQL`
+  const session = await getSession();
+  const [rows] = await db.query<RowDataPacket[]>(SQL`
       SELECT session.*, course.*, student.name AS creator_name, (
         SELECT rsvp_status 
         FROM StudySession.SessionAttendance 
@@ -150,7 +150,7 @@ export async function getAllUpcomingSessions() {
       WHERE session.start_time > NOW()
       ORDER BY session.start_time ASC
     `);
-    return rows as (Session &
+  return rows as (Session &
     Course & {
       creator_name: string;
       rsvp_status: RSVPStatus;
@@ -241,7 +241,7 @@ export async function getSessionDetails(session_id: number) {
       student.student_id,
       EXISTS (
         SELECT 1 
-        FROM StudySession.Message 
+        FROM StudySession.MessageLike 
         WHERE message_id = message.message_id 
         AND student_id = ${session?.userId}
       ) as has_liked
